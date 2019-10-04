@@ -1,6 +1,6 @@
 import java.util.Arrays;
 
-public class AllocationTuple implements Comparable<AllocationTuple> {
+public class AllocationTuple {
 
     // AuctionProblemInstance stored to reference the number of bidders
     private AuctionProblemInstance a;
@@ -59,19 +59,6 @@ public class AllocationTuple implements Comparable<AllocationTuple> {
     }
 
     @Override
-    public int compareTo(AllocationTuple o) {
-        for(int i = 0; i < this.bins.length; ){
-            int comp = Integer.compare(this.bins[i], o.bins[i]);
-
-            if (comp != 0){
-                return comp;
-            }
-        }
-
-        return 0;
-    }
-
-    @Override
     public boolean equals(Object obj) {
 
         if (this == obj)
@@ -87,5 +74,11 @@ public class AllocationTuple implements Comparable<AllocationTuple> {
         return Arrays.equals(this.bins, tup.bins);
 
     }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(this.bins);
+    }
+
 
 }
