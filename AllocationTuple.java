@@ -30,10 +30,10 @@ public class AllocationTuple {
     /**
      * Private constructor which only gets called when new items are assigned.
      * @param a Instance containing the max amount of bidders, biddings, budgets etc.
-     * @param v
-     * @param bins
-     * @param revenue
-     * @param epsilon
+     * @param v Array containing the revenue v_i for each bidder i. Has the size of the amount of bidders
+     * @param bins IntervalList object that contains the intervals where each v_i falls into.
+     * @param revenue Total revenue from the allocation.
+     * @param epsilon Epsilon value used for the approximation.
      */
     private AllocationTuple(AuctionProblemInstance a, int[] v, IntervalList bins, int revenue, double epsilon) {
         this.a = a;

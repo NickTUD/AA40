@@ -1,5 +1,12 @@
 import java.util.Arrays;
 
+/**
+ * Represents the list of intervals the revenue of each bidder v_i falls into.
+ * Mainly, a seperate class is made for this as we want to use a hash table to lookup whether or not
+ * the new set S_j contains an item with the same intervals already. As we're using a hash table, we need to therefore
+ * adapt the hashcode function to not use references but use the actual interval values. On top, this means that we have
+ * to change the equals method.
+ */
 public class IntervalList {
 
     private int[] intervals;
@@ -19,11 +26,13 @@ public class IntervalList {
 
         if (obj == null)
             return false;
-        // type check and cast
+
         if (getClass() != obj.getClass())
             return false;
+
         IntervalList list = (IntervalList) obj;
-        // field comparison
+
+        // Check whether intervals are equal
         return Arrays.equals(this.intervals, list.intervals);
 
     }
