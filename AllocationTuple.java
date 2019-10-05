@@ -9,7 +9,7 @@ public class AllocationTuple {
     private int[] v;
 
     //Keeps track in which bins v values fall
-    private int[] bins;
+    private IntervalList bins;
 
     //Keeps track of total revenue
     private int revenue;
@@ -19,10 +19,10 @@ public class AllocationTuple {
 
 
     public AllocationTuple(AuctionProblemInstance a, double epsilon) {
-        this(a, new int[a.n], new int[a.n], 0, epsilon);
+        this(a, new int[a.n], new IntervalList(new int[a.n]), 0, epsilon);
     }
 
-    private AllocationTuple(AuctionProblemInstance a, int[] v, int[] bins, int revenue, double epsilon) {
+    private AllocationTuple(AuctionProblemInstance a, int[] v, IntervalList bins, int revenue, double epsilon) {
         this.a = a;
         this.v = v;
         this.bins = bins;
@@ -31,7 +31,7 @@ public class AllocationTuple {
     }
 
     private AllocationTuple(AllocationTuple t) {
-        this(t.a, t.v.clone(), t.bins.clone(), t.revenue, t.epsilon);
+        this(t.a, t.v.clone(), new IntervalList(t.bins.getIntervals().clone()), t.revenue, t.epsilon);
     }
 
     /**
@@ -48,7 +48,7 @@ public class AllocationTuple {
         int newrev = Math.min(a.d[i], v[i] + a.b[i][j]);
 
         newTup.revenue = revenue + newrev - v[i];
-        newTup.bins[i] = (int) ((newrev * a.k) / (gamma * epsilon));
+        newTup.bins.getIntervals()[i] = (int) ((newrev * a.k) / (gamma * epsilon));
         newTup.v[i] = newrev;
 
         return newTup;
@@ -58,27 +58,8 @@ public class AllocationTuple {
         return this.revenue;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-
-        if (this == obj)
-            return true;
-
-        if (obj == null)
-            return false;
-        // type check and cast
-        if (getClass() != obj.getClass())
-            return false;
-        AllocationTuple tup = (AllocationTuple) obj;
-        // field comparison
-        return Arrays.equals(this.bins, tup.bins);
-
+    public IntervalList getIntervals(){
+        return this.bins;
     }
-
-    @Override
-    public int hashCode() {
-        return Arrays.hashCode(this.bins);
-    }
-
 
 }
