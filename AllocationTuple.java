@@ -1,8 +1,9 @@
-import java.util.Arrays;
-
+/**
+ * Class which represents the tuple (v_1,a_1,v_2,a_2,...,v_n,a_n,t)
+ */
 public class AllocationTuple {
 
-    // AuctionProblemInstance stored to reference the number of bidders
+    // AuctionProblemInstance stored to retrieve the number of bidders, biddings, budgets etc.
     private AuctionProblemInstance a;
 
     // Revenue from each bidder
@@ -17,11 +18,23 @@ public class AllocationTuple {
     //Keeps track of the epsilon value for updating the bins
     private double epsilon;
 
-
+    /**
+     * Creates a new tuple in which no items are allocated to anyone.
+     * @param a Instance containing the max amount of bidders, biddings, budgets etc.
+     * @param epsilon Epsilon value used for the approximation
+     */
     public AllocationTuple(AuctionProblemInstance a, double epsilon) {
         this(a, new int[a.n], new IntervalList(new int[a.n]), 0, epsilon);
     }
 
+    /**
+     * Private constructor which only gets called when new items are assigned.
+     * @param a Instance containing the max amount of bidders, biddings, budgets etc.
+     * @param v
+     * @param bins
+     * @param revenue
+     * @param epsilon
+     */
     private AllocationTuple(AuctionProblemInstance a, int[] v, IntervalList bins, int revenue, double epsilon) {
         this.a = a;
         this.v = v;
@@ -30,6 +43,10 @@ public class AllocationTuple {
         this.epsilon = epsilon;
     }
 
+    /**
+     * Copy constructor, makes a deep copy of t.
+     * @param t AllocationTuple to make a copy of
+     */
     private AllocationTuple(AllocationTuple t) {
         this(t.a, t.v.clone(), new IntervalList(t.bins.getIntervals().clone()), t.revenue, t.epsilon);
     }
@@ -45,11 +62,18 @@ public class AllocationTuple {
     public AllocationTuple assign(int i, int j, int gamma, double epsilon) {
 
         AllocationTuple newTup = new AllocationTuple(this);
-        int newrev = Math.min(a.d[i], v[i] + a.b[i][j]);
 
-        newTup.revenue = revenue + newrev - v[i];
-        newTup.bins.getIntervals()[i] = (int) ((newrev * a.k) / (gamma * epsilon));
-        newTup.v[i] = newrev;
+        //Calculate the new revenue for bidder i
+        int newBidderRev = Math.min(a.d[i], v[i] + a.b[i][j]);
+
+        //Update the total revenue
+        newTup.revenue = revenue + newBidderRev - v[i];
+
+        //Update the bin for v_i
+        newTup.bins.getIntervals()[i] = (int) ((newBidderRev * a.k) / (gamma * epsilon));
+
+        //Update v_i itself
+        newTup.v[i] = newBidderRev;
 
         return newTup;
     }
