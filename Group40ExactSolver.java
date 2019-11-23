@@ -1,76 +1,72 @@
 import java.util.*;
 
+// O(n * 4^k) exact algorithm for auctions with budget constraints
+public class Group40ExactSolver implements Solver {
 
-public class Group40ApproxSolver implements Solver {
+    public static int getOptimalValue(AuctionProblemInstance a, int[] assignment, int item) {
 
-    public static int getOptimalValue(AuctionProblemInstance a, int[] assignment, int item, double epsilon) {
+        int amountOfItemSubsets = (int) Math.pow(2, a.k);
 
-        // Calculate d_max
-        int gamma = Tools.getMax(a.d);
+        //ArrayList containing the valid combinations of subsets of the items.
+        //Main choice here is to have a list which has O(1) additions.
+        ArrayList<AllocationCombi> validCombi = new ArrayList<AllocationCombi>();
 
-        // Variable which keeps track of the max revenue
-        int revmax = 0;
+        //Generates all valid subset divisions such that no item is shared amongst buyers.
+        //The first item (index 0 in the bidding matrix) is the least significant bit.
+        //Example:
+        //Buyer 1 buys the first and third item = 101 (binary) = 5 decimal
+        //Buyer 2 buys the first and second item = 011 (binary) = 3 decimal
+        //This is not a valid division since both buy the first item.
+        //These valid combinations are used to combine the optimal profit for the first n bidders
+        //with the biddings of bidder n+1 to get the optimal profit for the first n+1 bidders.
+        //Thus we consider every non identical combination.
+        for(int i = 0; i < amountOfItemSubsets; i++) {
+            for(int j = i+1; j < amountOfItemSubsets; j++) {
 
-        // Queue which is equal to S_{j-1} according to the algorithm
-        Deque<AllocationTuple> queue = new ArrayDeque<>();
-
-        // Initialize S_0, the initial set. S_0 only contains one item, the allocation where no one has been allocated
-        // an item yet.
-        queue.add(new AllocationTuple(a,epsilon));
-
-        // For every item j
-        for (int j = 0; j < a.k; j++) {
-
-            // Hashtable which represents the set S_j according to the algorithm.
-            // Revenues which belong to the same intervals are hashed to the same bucket.
-            // This means that hashtable contains only one entry for every interval combination.
-            Hashtable<IntervalList, AllocationTuple> map = new Hashtable<>();
-
-            // For every allocation in set S_{j-1}
-            while(!queue.isEmpty()) {
-
-                AllocationTuple tup = queue.pop();
-
-                // For every bidder i
-                for (int i = 0; i < a.n; i++) {
-
-                    // Allocate item j to bidder i
-                    AllocationTuple newTup = tup.assign(i, j, gamma, epsilon);
-
-                    // Check if there exists a tuple already in S_j where the intervals are the same.
-                    AllocationTuple oldTup = map.get(newTup.getIntervals());
-
-                    if (oldTup == null) {
-
-                        //If it doesn't, we can store this tuple.
-                        map.put(newTup.getIntervals(), newTup);
-                    } else {
-
-                        //If there does exist a tuple with the same interval, we only want to keep the new one
-                        //if it's at least better in terms of total revenue.
-                        if (newTup.getRevenue() >= oldTup.getRevenue()) {
-                            map.put(newTup.getIntervals(), newTup);
-                        }
-                    }
+                //If the item subsets share no item, e.g. an AND between their binary representations is equal to 0,
+                //we add them to our list.
+                if((i & j) == 0){
+                    validCombi.add(new AllocationCombi(i,j));
                 }
-            }
-
-            // Now we need to update our queue variable for the next iteration so that S_j in this iteration is equal
-            // to S_{j-1} in the next iteration. Also update the maximum revenue.
-            for(IntervalList list : map.keySet()){
-                AllocationTuple tup = map.get(list);
-                queue.add(tup);
-                revmax = Math.max(revmax, tup.getRevenue());
             }
         }
 
-        return revmax;
+        //Note that the bidding matrix of the input instance only stores biddings per individual item
+        //and we're interested in subsets of all items.
+        //Since we don't want to calculate their biddings for such a subset multiple times,
+        //we calculate them per bidder for each subset once and store it in this 2d array for O(1) access.
+        int[][] subsetPricesByBidder = new int[a.n][amountOfItemSubsets];
+
+        for(int bidder = 0; bidder < a.n; bidder++){
+            for(int exp = 0; exp < a.k; exp++){
+                int pow2 = (int) Math.pow(2, exp);
+                subsetPricesByBidder[bidder][pow2] = Math.min(a.b[bidder][exp], a.d[bidder]);
+                for(int rest = 1; rest < pow2; rest++){
+                    subsetPricesByBidder[bidder][pow2+rest] = Math.min(subsetPricesByBidder[bidder][pow2] + subsetPricesByBidder[bidder][rest], a.d[bidder]);
+                }
+            }
+        }
+
+        int[][] profitFirstNBidders = new int[(a.n + 1)][amountOfItemSubsets];
+
+
+        for(int bidder = 0; bidder < a.n; bidder++){
+            for (AllocationCombi combination : validCombi) {
+                int profit1 = profitFirstNBidders[bidder][combination.subset1] + subsetPricesByBidder[bidder][combination.subset2];
+                int profit2 = profitFirstNBidders[bidder][combination.subset2] + subsetPricesByBidder[bidder][combination.subset1];
+                profitFirstNBidders[bidder+1][combination.subset_combi] = Math.max(Math.max(profit1,profit2), profitFirstNBidders[bidder+1][combination.subset_combi]);
+            }
+        }
+
+//        System.out.println(Arrays.deepToString(profitFirstNBidders));
+
+        return profitFirstNBidders[a.n][amountOfItemSubsets - 1];
     }
 
     @Override
     public AuctionProblemInstance.Solution solve(AuctionProblemInstance a, double epsilon) {
         int[] assignment = new int[a.k];
-        return new AuctionProblemInstance.Solution(getOptimalValue(a, assignment, 0, epsilon), epsilon);
+        return new AuctionProblemInstance.Solution(getOptimalValue(a, assignment, 0), epsilon);
     }
 
     @Override

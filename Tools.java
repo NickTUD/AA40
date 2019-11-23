@@ -30,4 +30,8 @@ public class Tools {
         }
         return sum;
     }
+    
+    public static int getAverage(int[] arr){
+        return getSum(arr) / arr.length;
+    }
 }

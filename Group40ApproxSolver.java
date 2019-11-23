@@ -1,7 +1,7 @@
 import java.util.*;
 
 
-public class Group40Solver implements Solver {
+public class Group40ApproxSolver implements Solver {
 
     public static int getOptimalValue(AuctionProblemInstance a, int[] assignment, int item, double epsilon) {
 
